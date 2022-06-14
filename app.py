@@ -17,8 +17,8 @@ from config import CLASSES, WEBRTC_CLIENT_SETTINGS
 
 #изменим название страницы, отображаемое на вкладке браузера
 #set_page_config должна вызываться до всех функций streamlit
-MAGE_EMOJI_URL = 'BCX_LOGO_RGB_FC-TRANSPARENT-300x135-1.png'
-MAGE_EMOJI_UR= 'BCX_LOGO_RGB_FC-TRANSPARENT-300x135-1.png'
+MAGE_EMOJI_URL = 'mrp-logo.svg'
+MAGE_EMOJI_UR= 'mrp-logo.svg'
 st.set_page_config(
     page_title="BCX-SOS",page_icon=MAGE_EMOJI_URL
 )
