@@ -20,7 +20,7 @@ from config import CLASSES, WEBRTC_CLIENT_SETTINGS
 MAGE_EMOJI_URL = 'mr-price-logo-768x214.png'
 MAGE_EMOJI_UR= 'mr-price-logo-768x214.png'
 st.set_page_config(
-    page_title="BCX-SOS",page_icon=MAGE_EMOJI_URL
+    page_title="Mr. Price",page_icon=MAGE_EMOJI_URL
 )
 st.markdown("<br>", unsafe_allow_html=True)
 st.image(MAGE_EMOJI_UR, width=235)
