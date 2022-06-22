@@ -15,12 +15,11 @@ from streamlit_webrtc import VideoTransformerBase, webrtc_streamer
 
 from config import CLASSES, WEBRTC_CLIENT_SETTINGS
 
-#изменим название страницы, отображаемое на вкладке браузера
-#set_page_config должна вызываться до всех функций streamlit
-MAGE_EMOJI_URL = 'mr-price-logo-768x214.png'
-MAGE_EMOJI_UR= 'mr-price-logo-768x214.png'
+
+MAGE_EMOJI_URL = 'sens.png'
+MAGE_EMOJI_UR= 'sens.png'
 st.set_page_config(
-    page_title="Mr. Price",page_icon=MAGE_EMOJI_URL
+    page_title="Sensifeye",page_icon=MAGE_EMOJI_URL
 )
 st.markdown("<br>", unsafe_allow_html=True)
 st.image(MAGE_EMOJI_UR, width=235)
@@ -33,59 +32,19 @@ st.title('Computer Vision')
 
 @st.cache(max_entries=2)
 def get_yolo5(model_type='s'):
-    '''
-    Возвращает модель YOLOv5 из Torch Hub типа `model_type`
-
-    Arguments
-    ----------
-    model_type : str, 's', 'm', 'l' or 'x'
-        тип модели - s - самая быстрая и неточная, x - самая точная и медленная
-
-    Returns
-    -------
-    torch model
-        torch-модель типа `<class 'models.common.autoShape'>`
-    '''
+    
     return torch.hub.load('ultralytics/yolov5', 'custom', path='bestcj9.pt')
                           
 
 @st.cache(max_entries=10)
 def get_preds(img : np.ndarray) -> np.ndarray:
-    """
-    Возвращает прогнозы, полученные от YOLOv5
 
-    Arguments
-    ---------
-    img : np.ndarray
-        RGB-изображение загруженное с помощью OpenCV
-
-    Returns
-    -------
-    2d np.ndarray
-        Список найденных объектов в формате 
-        `[xmin,ymin,xmax,ymax,conf,label]`
-    """
     m = model([img]).xyxy[0].numpy()
     return m
     st.write(m)
 
 def get_colors(indexes : List[int]) -> dict:
-    '''
-    Возвращает цвета для всех выбранных классов. Цвета формируются 
-    на основе наборов TABLEAU_COLORS и BASE_COLORS из Matplotlib
-
-    Arguments
-    ----------
-    indexes : list of int
-        список индексов классов в порядке по умолчанию для 
-        MS COCO (80 классов, без background)
-
-    Returns
-    -------
-    dict
-        словарь, в котором ключи - id классов, указанные в 
-        indexes, а значения - tuple с компонентами rgb цвета, например, (0,0,0)
-    '''
+   
     to_255 = lambda c: int(c*255)
     tab_colors = list(mcolors.TABLEAU_COLORS.values())
     tab_colors = [list(map(to_255, mcolors.to_rgb(name_color))) 
@@ -105,27 +64,13 @@ def get_colors(indexes : List[int]) -> dict:
     return color_dict
 
 def get_legend_color(class_name : int):
-    """
-    Возвращает цвет ячейки для `pandas.Styler` при создании легенды. 
-    Раскарасит ячейку те же цветом, который имеют боксы соотвествующего класс
-
-    Arguments
-    ---------
-    class_name : int
-        название класса согласно списку классов MS COCO
-
-    Returns
-    -------
-    str
-        background-color для ячейки, содержащей class_name
-    """  
-
+    
     index = CLASSES.index(class_name)
     color = rgb_colors[index]
     return 'background-color: rgb({color[0]},{color[1]},{color[2]})'.format(color=color)
 
 class VideoTransformer(VideoTransformerBase):
-    """Компонент для создания стрима веб камеры"""
+    
     def __init__(self):
         self.model = model
         self.rgb_colors = rgb_colors
@@ -189,8 +134,6 @@ all_labels_chbox = st.sidebar.checkbox('All Brands', value=True)
 # ---------------------------------------------------------
 
 #target labels and their colors
-#target_class_ids - индексы выбранных классов согласно списку классов MS COCC
-#rgb_colors - rgb-цвета для выбранных классов
 if all_labels_chbox:
     target_class_ids = list(range(len(CLASSES)))
 elif classes_selector:
@@ -204,15 +147,15 @@ detected_ids = None
 
 if prediction_mode == 'Single image':
 
-    # добавляет форму для загрузки изображения
+    
     uploaded_file = st.file_uploader(
         "Choose an image",
         type=['png', 'jpg', 'jpeg'])
 
-    # если файл загружен
+    
     if uploaded_file is not None:
 
-        # конвертация изображения из bytes в np.ndarray
+        
         bytes_data = uploaded_file.getvalue()
         file_bytes = np.asarray(bytearray(bytes_data), dtype=np.uint8)
         img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
@@ -243,17 +186,16 @@ if prediction_mode == 'Single image':
         names =["Koo", "Rhodes", "Ritebrand"]
 
 
-        #скопируем результаты работы кэшируемой функции, чтобы не изменить кэш
+        
         result_copy = result.copy()
-        #отберем только объекты нужных классов
+       
         result_copy = result_copy[np.isin(result_copy[:,-1], target_class_ids)]
         
 
         detected_ids = []
-        #также скопируем изображение, чтобы не изменить аргумент кэшируемой 
-        # функции get_preds
+        
         img_draw = img.copy().astype(np.uint8)
-        # нарисуем боксы для всех найденных целевых объектов
+       
         for bbox_data in result_copy:
             xmin, ymin, xmax, ymax, _, label = bbox_data
             p0, p1, label = (int(xmin), int(ymin)), (int(xmax), int(ymax)), int(label)
@@ -262,13 +204,11 @@ if prediction_mode == 'Single image':
                                     rgb_colors[label], 2) 
             detected_ids.append(label)
         
-        # выведем изображение с нарисованными боксами
-        # use_column_width растянет изображение по ширине центральной колонки
+        
         import plotly.express as px
         st.image(img_draw, use_column_width=True)
         
-        # выведем список найденных классов при работе с изображением или список всех
-        # выбранных классов при работе с видео
+       
 
         
         
@@ -313,14 +253,13 @@ if prediction_mode == 'Single image':
 
 elif prediction_mode == 'Web camera':
     
-    # создаем объект для вывода стрима с камеры
+    
     ctx = webrtc_streamer(
         key="example", 
         video_transformer_factory=VideoTransformer,
         client_settings=WEBRTC_CLIENT_SETTINGS,)
 
-    # необходимо для того, чтобы объект VideoTransformer подхватил новые данные
-    # после обновления страницы streamlit
+    
     if ctx.video_transformer:
         ctx.video_transformer.model = model
         ctx.video_transformer.rgb_colors = rgb_colors
